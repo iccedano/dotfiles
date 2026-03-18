@@ -1,0 +1,28 @@
+[general]
+bars = 40
+framerate = 60
+sensitivity = 70
+autosens = 1
+overshoot = 10
+
+[output]
+mode = wave
+stereo = 1
+bar_delimiter = 0
+mono_option = average
+
+[color]
+gradient = 1
+gradient_color_1 = '#2a9df4'
+gradient_color_2 = '#8F00FF'
+foreground = default
+background = default
+
+[input]
+method = pulse
+source = auto
+
+[smoothing]
+integral = 80
+monstercat = 0
+waves = 1

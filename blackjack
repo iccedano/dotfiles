@@ -2,6 +2,25 @@
 
 # Working variables 
 DELAY=3
+STYLING_DIR=~/ICEbreaker/cyberdeck_styling
+
+# Packages for server/WSL installation
+MINIMAL_PACKAGES=(
+  "neovim"
+  "zsh"
+  "git"
+  "wget"
+  "btop"
+  "pip"
+  "cowsay"
+  "unrar"
+  "nmap"
+  "7z"
+  "lm_sensors"
+  "zbar"
+  "python3-tkinter"
+  "bridge-utils"
+)
 
 # List of packages to install
 BASE_PACKAGES=(
@@ -14,19 +33,23 @@ BASE_PACKAGES=(
   "git"
   "wget"
   "btop"
-  "tldr"
-  "gnome-tweaks"
   "pip"
   "cowsay"
   "unrar"
-  "dconf-editor"
   "nmap"
   "7z"
-  "adw-gtk3-theme"
   "alacritty"
-  "woeusb"
   "firewall-config"
   "lm_sensors"
+  "zbar"
+  "python3-tkinter"
+  "bridge-utils"
+)
+
+GNOME_PACKAGES=(
+  "gnome-tweaks"
+  "dconf-editor"
+  "adw-gtk3-theme"
 )
 
 GNOME_EXTENSIONS=(
@@ -57,6 +80,9 @@ FLATPAKS=(
   "io.github.flattool.Warehouse"
   "io.bassi.Amberol"
   "org.nickvision.tagger"
+  "com.github.finefindus.eyedropper"
+  "io.github.ungoogled_software.ungoogled_chromium"
+  "app.zen_browser.zen"
 )
 
 GTK_THEMES=(
@@ -66,31 +92,158 @@ GTK_THEMES=(
 
 # Cool ass banner
 banner() {
-  echo -e ' 
-\e[1;34m
-     __ __    __           __     _            __    __
-   _/ // /_  / /___ ______/ /__  (_)___ ______/ /___/ /
-  / __/ __ \/ / __ `/ ___/ //_/ / / __ `/ ___/ //_/ __/
- (_  ) /_/ / / /_/ / /__/ ,<   / / /_/ / /__/ ,< (_  ) 
-/  _/_.___/_/\__,_/\___/_/|_|_/ /\__,_/\___/_/|_/  _/  
-/_/                        /___/                /_/    
-
-\e[0m
-\033[1;92;5m.:-$.:-$.:-$.:-$\033[0m\e[1;92;3m~ Man I Love Fedora! ~\e[0m\033[1;92;5m.:-$.:-$.:-$.:-$\033[0m
-'
+  # Matrix-style characters
+  local matrix_chars=('a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 'u' 'v' 'w' 'x' 'y' 'z' 'A' 'B' 'C' 'D' 'E' 'F' 'G' 'H' 'I' 'J' 'K' 'L' 'M' 'N' 'O' 'P' 'Q' 'R' 'S' 'T' 'U' 'V' 'W' 'X' 'Y' 'Z' '0' '1' '2' '3' '4' '5' '6' '7' '8' '9' '!' '@' '#' '$' '%' '^' '&' '*' '(' ')' '-' '_' '=' '+' '[' ']' '{' '}' '|' ';' ':' '<' '>' ',' '.' '?' '/')
+  
+  # Characters for spinning animation
+  local spin_chars=('$' '&' '%' '#' '@' '*' '+' 'x')
+  
+  # Store the final banner lines (without $ signs for now)
+  local final_banner=(
+    "╔════════════════════════════════════════════════════════╗"
+    "      __ __    __           __     _            __    __ "
+    "    _/ // /_  / /___ ______/ /__  (_)___ ______/ /___/ / "
+    "   / __/ __ \/ / __ \`/ ___/ //_/ / / __ \`/ ___/ //_/ __/ "
+    "  (_  ) /_/ / / /_/ / /__/ ,<   / / /_/ / /__/ ,< (_  )  "
+    " /  _/_.___/_/\__,_/\___/_/|_|_/ /\__,_/\___/_/|_/  _/   "
+    " /_/                        /___/                /_/     "
+    "╚════════════════════════════════════════════════════════╝"
+  )
+  
+  # Clear screen and set color
+  clear
+  echo -e "\e[1;32m" # Matrix green color
+  
+  # Create a matrix of random characters matching the dimensions of the final banner
+  local matrix=()
+  local revealed=()
+  
+  # Initialize the matrix with random characters and the revealed matrix with spaces
+  for line in "${final_banner[@]}"; do
+    local line_length=${#line}
+    local random_line=""
+    local revealed_line=""
+    
+    for ((j=0; j<line_length; j++)); do
+      random_line+="${matrix_chars[$((RANDOM % ${#matrix_chars[@]}))]}"
+      revealed_line+=" "
+    done
+    
+    matrix+=("$random_line")
+    revealed+=("$revealed_line")
+  done
+  
+  # Number of iterations for the effect
+  local iterations=5
+  
+  # Gradually reveal the banner
+  for ((iter=0; iter<iterations; iter++)); do
+    # For each line in the banner
+    for ((i=0; i<${#final_banner[@]}; i++)); do
+      local line_length=${#final_banner[$i]}
+      local new_line=""
+      
+      # For each character in the line
+      for ((j=0; j<line_length; j++)); do
+        # Randomly decide whether to reveal this character in this iteration
+        if [[ "${revealed[$i]:$j:1}" == " " && $((RANDOM % 3)) -eq 0 ]]; then
+          # Reveal the character
+          revealed[$i]="${revealed[$i]:0:$j}${final_banner[$i]:$j:1}${revealed[$i]:$j+1}"
+          new_line+="${final_banner[$i]:$j:1}"
+        elif [[ "${revealed[$i]:$j:1}" != " " ]]; then
+          # Already revealed, keep it
+          new_line+="${revealed[$i]:$j:1}"
+        else
+          # Not revealed yet, show a random character
+          new_line+="${matrix_chars[$((RANDOM % ${#matrix_chars[@]}))]}"
+        fi
+      done
+      
+      matrix[$i]="$new_line"
+    done
+    
+    # Display the current state
+    tput cup 0 0
+    for line in "${matrix[@]}"; do
+      echo "$line"
+    done
+    
+    # Small delay between iterations
+    sleep 0.2
+  done
+  
+  # Make sure all characters are revealed in the final state
+  for ((i=0; i<${#final_banner[@]}; i++)); do
+    tput cup "$i" 0
+    echo -e "${final_banner[$i]}"
+  done
+  
+  # Small pause before starting the spinning animation
+  sleep 0.5
+  
+  # Now do the spinning $ signs animation
+  local num_frames=${#spin_chars[@]}
+  
+  # Run spinning animation for a few cycles
+  for ((i=0; i<16; i++)); do
+    # Calculate current frame
+    local frame=$((i % num_frames))
+    local current_char="${spin_chars[$frame]}"
+    
+    # Update only the side characters
+    tput cup 1 0
+    echo -e "${current_char}     __ __    __           __     _            __    __ ${current_char}"
+    tput cup 2 0
+    echo -e "${current_char}   _/ // /_  / /___ ______/ /__  (_)___ ______/ /___/ / ${current_char}"
+    tput cup 3 0
+    echo -e "${current_char}  / __/ __ \/ / __ \`/ ___/ //_/ / / __ \`/ ___/ //_/ __/ ${current_char}"
+    tput cup 4 0
+    echo -e "${current_char} (_  ) /_/ / / /_/ / /__/ ,<   / / /_/ / /__/ ,< (_  )  ${current_char}"
+    tput cup 5 0
+    echo -e "${current_char}/  _/_.___/_/\__,_/\___/_/|_|_/ /\__,_/\___/_/|_/  _/   ${current_char}"
+    tput cup 6 0
+    echo -e "${current_char}/_/                        /___/                /_/     ${current_char}"
+    
+    # Small delay between frames
+    sleep 0.1
+  done
+  
+  # Final state with $ signs
+  tput cup 1 0
+  echo -e "$     __ __    __           __     _            __    __ $"
+  tput cup 2 0
+  echo -e "$   _/ // /_  / /___ ______/ /__  (_)___ ______/ /___/ / $"
+  tput cup 3 0
+  echo -e "$  / __/ __ \/ / __ \`/ ___/ //_/ / / __ \`/ ___/ //_/ __/ $"
+  tput cup 4 0
+  echo -e "$ (_  ) /_/ / / /_/ / /__/ ,<   / / /_/ / /__/ ,< (_  )  $"
+  tput cup 5 0
+  echo -e "$/  _/_.___/_/\__,_/\___/_/|_|_/ /\__,_/\___/_/|_/  _/   $"
+  tput cup 6 0
+  echo -e "$/_/                        /___/                /_/     $"
+  
+  # Reset color and move cursor to the end
+  echo -e "\e[0m"
+  tput cup 8 0
 }
 
-# Automate the install of pfetch
-pfetch_install() {
-  cd
-  git clone https://github.com/dylanaraps/pfetch.git
-  sudo install pfetch/pfetch /usr/local/bin/
-  rm -rfv pfetch
-}
+minimal_install() {
+  # Install minimal packages
+  echo -e "\e[1;34mInstalling packages...\e[0m"
+  sudo dnf install -y "${MINIMAL_PACKAGES[@]}"
+  
+  # Modern fetch
+  pfetch_install
 
+  # Console cowboy arsenal
+  console_cowboy_arsenal
+
+  cp -rv $STYLING_DIR/zellij ~/.config/
+  cp -rv $STYLING_DIR/nvim ~/.config/
+}
 fedora_install() {
   # Install base packages
-  echo "Installing packages..."
+  echo -e "\e[1;34mInstalling packages...\e[0m"
   sudo dnf install -y "${BASE_PACKAGES[@]}"
   
   # Install flatpaks
@@ -102,10 +255,8 @@ fedora_install() {
   sudo dnf config-manager setopt fedora-cisco-openh264.enabled=1
   sudo dnf swap ffmpeg-free ffmpeg --allowerasing
   sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
-  sudo dnf install libva-intel-driver
-  sudo dnf group install Multimedia
-  sudo dnf install -y ffmpegthumbnailer cmus cava
-  cp -rv ~/bin/tweaks/cava ~/.config/
+  sudo dnf group install -y Multimedia
+  sudo dnf install -y ffmpegthumbnailer cmus cava libva-intel-driver
 
   # Install KVM and virt manager
   echo "Installing KVM virtualization..."
@@ -115,69 +266,80 @@ fedora_install() {
   sudo usermod -a -G libvirt $(whoami)
   sudo usermod -a -G kvm $(whoami)
   
-  # Install brave browser
-  sudo dnf install dnf-plugins-core
-  sudo dnf config-manager addrepo --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
-  sudo dnf install -y brave-browser
-
-  # Install cursor
-  cursor_ide
-
   # Modern fetch
   pfetch_install
+
+  # Console cowboy arsenal
+  console_cowboy_arsenal
+  styling_cyberdeck
+}
+
+# Automate the install of pfetch
+pfetch_install() {
+  cd
+  git clone https://github.com/dylanaraps/pfetch.git
+  sudo install pfetch/pfetch /usr/local/bin/
+  rm -rfv pfetch
+}
+
+styling_cyberdeck() {
+  # Load MesloLGS font
+  mkdir -p ~/.local/share/fonts
+  cp -rv $STYLING_DIR/meslo/* ~/.local/share/fonts
+  fc-cache -fv
+  
+  # Setup Alacritty
+  mkdir -p ~/.config/alacritty/themes
+  git clone https://github.com/alacritty/alacritty-theme ~/.config/alacritty/themes
+  cp $STYLING_DIR/alacritty.toml ~/.config/alacritty
+  
+  # Install cmus themes
+  mkdir -p ~/.config/cmus
+  cd ~/.config/cmus
+  wget https://github.com/johnnymatthews/cmus-themes/releases/download/v1.0.0/cmus-themes-v1-0-0.tar.gz
+  tar xvf cmus-themes-v1-0-0.tar.gz
+  rm cmus-themes-v1-0-0.tar.gz
+  cd
+  
+  # cava config
+  cp -rv $STYLING_DIR/zellij ~/.config/
+  cp -rv $STYLING_DIR/nvim ~/.config/
+  cp -rv $STYLING_DIR/cava ~/.config/
 
   # Set dark theme
   gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' && gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 
-  # Configure alacritty
-  mkdir -p ~/.config/alacritty/themes
-  git clone https://github.com/alacritty/alacritty-theme ~/.config/alacritty/themes
-  cp ~/bin/tweaks/alacritty.toml ~/.config/alacritty
-
-  # Install ZSH
-  tweaks
-
-  gnome_works
-
-  laptop_prompt
+  # excellent cursor
+  wget https://gitlab.com/-/project/6703061/uploads/71144f0c1abaed7824804bf23bad0a88/Hackneyed-Dark-0.9.3-right-handed.tar.bz2
+  tar xvf Hackneyed-Dark-0.9.3-right-handed.tar.bz2
+  sudo cp -r Hackneyed-Dark/ /usr/share/icons/
+  rm -r Hackneyed-Dark*
 }
 
-tweaks() {
-
-  # Load ZSH with plugins
+console_cowboy_arsenal() {
+  # Install ZSH with plugins
   sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
   cd ~/.oh-my-zsh/custom/plugins
   git clone https://github.com/zsh-users/zsh-autosuggestions.git
   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
   git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git
-  git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+  git clone https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
   cd
   
-  # Copy config files and zshrc
-  cat ~/bin/zshrc > ~/.zshrc
-  cp -rv ~/bin/tweaks/nvim ~/.config/
-  zsh
-
-  # Load MesloLGS font
-  mkdir -p ~/.local/share/fonts
-  cp -rv ~/bin/tweaks/meslo/* ~/.local/share/fonts
-  fc-cache -fv
-
   # Install zellij
   wget https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz
   tar xvf zellij-x86_64-unknown-linux-musl.tar.gz
   sudo mv zellij /usr/local/bin
   rm zellij-x86_64-unknown-linux-musl.tar.gz
-  cp -rfv ~/bin/tweaks/zellij ~/.config/
 
-  # Copy flameshot wayland binary and set automount to false
-  sudo cp -v ~/bin/tweaks/bicflame /usr/local/bin/
-  gsettings set org.gnome.desktop.media-handling automount false
-  gsettings set org.gnome.desktop.media-handling automount-open false
+  # Load zshrc
+  cat $STYLING_DIR/zshrc > ~/.zshrc
 }
 
 gnome_works() {
+  # Install gnome tweaks
+  sudo dnf install -y "${GNOME_PACKAGES[@]}"
+
   # Load icons
   mkdir .icons && cd 
   echo "Loading icons..."
@@ -185,11 +347,8 @@ gnome_works() {
   cp -r kora/kora/ ~/.icons/
   rm -rf kora/ 
   
-  # And cursor
-  wget https://gitlab.com/-/project/6703061/uploads/71144f0c1abaed7824804bf23bad0a88/Hackneyed-Dark-0.9.3-right-handed.tar.bz2
-  tar xvf Hackneyed-Dark-0.9.3-right-handed.tar.bz2
-  sudo cp -r Hackneyed-Dark/ /usr/share/icons/
-  rm -r Hackneyed-Dark*
+  # Copy flameshot wayland binary and set automount to false
+  sudo cp -v $STYLING_DIR/bicflame /usr/local/bin/
 
   # Remove bloat
   sudo dnf remove -y "${GNOME_BLOAT[@]}"
@@ -203,7 +362,7 @@ gnome_works() {
   done
 
   # Load dconf settings
-  dconf load / < ~/bin/tweaks/fedora-settings.dconf
+  dconf load / < $STYLING_DIR/fedora-settings.dconf
 }
 
 load_extensions() {
@@ -223,57 +382,25 @@ load_extensions() {
   gnome-extensions install "https://extensions.gnome.org$download_url"
 }
 
-cursor_ide() {
-  # Install cursor
-  mkdir -p ~/.local/bin/cursor
-  cd ~/.local/bin/cursor
-  wget "https://downloader.cursor.sh/linux/appImage/x64"
-  mv x64 cursor.appimage
-  chmod +x cursor.appimage
-  cp ~/bin/tweaks/cursor.png ~/.local/bin/cursor/
-  echo "
-  [Desktop Entry]
-  Name=Cursor
-  Comment=Code Editing. Redefined.
-  Exec=/home/$USER/.local/bin/cursor/cursor.appimage
-  Icon=/home/$USER/.local/bin/cursor/cursor.png
-  Terminal=false
-  Type=Application" > ~/.local/share/applications/cursor.desktop
-}
-
-# Install programs and tweaks optimized for laptops
-laptop_tweaks() {
-  # Install battery optimizer gnome extension
-  load_extensions "Battery-Health-Charging@maniacx.github.com" 
-  chmod +x /home/$USER/.local/share/gnome-shell/extensions/Battery-Health-Charging@maniacx.github.com/tool/installer.sh
-}
-
-# Simple laptop prompt
-laptop_prompt() {
-  while true; do
-    read -p "Laptop install? y/n --> "
-    case "$REPLY" in
-      y|Y)    echo "Loading laptop components..."
-              sleep "$DELAY"
-              laptop_tweaks
-              return 0
-            ;;
-      n|N)    echo "Skipping laptop components..."
-              return 1
-            ;;
-    esac
-  done
-}
-
 # Detect the package manager and install packages
 while true; do
   banner
-  read -p "
-Remember to update and restart before proceeding!
-Do you wish to do a fresh install? y/n --> "
+  echo -e "
+\e[1;93mWARNING:\e[0m Your deck needs a firmware update before jacking in, cowboy.
+         Run the upgrade sequence first!
+\e[1;92mJack in?\e[0m [y/n] --> "
+  read REPLY
   case "$REPLY" in
     y|Y)    if command -v dnf > /dev/null; then
-              fedora_install
+              if command echo $XDG_CURRENT_DESKTOP | grep -q "sway"; then
+                fedora_install
+              elif command echo $XDG_CURRENT_DESKTOP | grep -q "GNOME"; then
+                fedora_install
+                gnome_works
+              else
+                minimal_install
+                exit 1
+              fi
             else
               echo "Unsupported package manager. Please install packages manually."
               exit 1
@@ -284,7 +411,7 @@ Do you wish to do a fresh install? y/n --> "
           sleep "$DELAY"
           exit
           ;;
-    n|N)    echo "Fresh install aborted."
+    n|N)    echo -e "\e[1;31mJack out initiated. Connection terminated.\e[0m"
             exit
           ;;
   esac

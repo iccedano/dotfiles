@@ -1,11 +1,104 @@
 #!/bin/bash
-if [ "$1" == "" ]
-then
-echo "You forgot an IP address!"
-echo "Syntax: ./ipsweep.sh 192.168.1"
 
-else
-for ip in `seq 1 254`; do
-ping -c 1 $1.$ip | grep "64 bytes" | cut -d " " -f 4 | tr -d ":" &
-done
+# Function to calculate network range based on subnet mask
+calculate_network_range() {
+    local ip=$1
+    local mask=$2
+    
+    # Split the IP into octets
+    IFS='.' read -r -a octets <<< "$ip"
+    
+    # Calculate the number of hosts based on subnet mask
+    local host_bits=$((32 - mask))
+    local num_hosts=$((2**host_bits - 2))
+    
+    # Calculate the network address
+    local network_address=""
+    for ((i=0; i<${#octets[@]}; i++)); do
+        # Convert octet to binary
+        local octet_bin=$(printf '%08d' "$(echo "obase=2; ${octets[i]}" | bc)")
+        
+        # Apply subnet mask
+        local mask_bits=$((mask - (i * 8)))
+        if [ $mask_bits -gt 8 ]; then
+            mask_bits=8
+        elif [ $mask_bits -lt 0 ]; then
+            mask_bits=0
+        fi
+        
+        # Apply mask to octet
+        local masked_octet_bin=""
+        for ((j=0; j<8; j++)); do
+            if [ $j -lt $mask_bits ]; then
+                masked_octet_bin+="${octet_bin:$j:1}"
+            else
+                masked_octet_bin+="0"
+            fi
+        done
+        
+        # Convert back to decimal
+        local masked_octet=$(echo "ibase=2; $masked_octet_bin" | bc)
+        network_address+="$masked_octet"
+        if [ $i -lt 3 ]; then
+            network_address+="."
+        fi
+    done
+    
+    echo "$network_address $num_hosts"
+}
+
+# Check if IP address is provided
+if [ "$1" == "" ]; then
+    echo "Usage: ./ipsweep <network_ip> <subnet_mask>"
+    echo "Example: ./ipsweep 10.26.5.0 24"
+    echo "Example: ./ipsweep 192.168.16.0 22 (for /22 subnet)"
+    exit 1
 fi
+
+# Check if subnet mask is provided
+if [ "$2" == "" ]; then
+    echo "Please specify a subnet mask (e.g., 24 for /24 network)"
+    exit 1
+fi
+
+# Validate subnet mask is between 1 and 31
+if [ "$2" -lt 1 ] || [ "$2" -gt 31 ]; then
+    echo "Invalid subnet mask. Must be between 1 and 31"
+    exit 1
+fi
+
+# Calculate network range
+read network_address num_hosts <<< $(calculate_network_range $1 $2)
+
+# Function to convert IP to integer
+ip_to_int() {
+    local ip=$1
+    IFS='.' read -r o1 o2 o3 o4 <<< "$ip"
+    echo $((o1 * 256**3 + o2 * 256**2 + o3 * 256 + o4))
+}
+
+# Function to convert integer to IP
+int_to_ip() {
+    local num=$1
+    echo "$(( (num >> 24) & 255 )).$(( (num >> 16) & 255 )).$(( (num >> 8) & 255 )).$(( num & 255 ))"
+}
+
+# Calculate start and end IPs
+start_ip_int=$(($(ip_to_int $network_address) + 1))
+end_ip_int=$((start_ip_int + num_hosts - 1))
+
+start_ip=$(int_to_ip $start_ip_int)
+end_ip=$(int_to_ip $end_ip_int)
+
+# Perform the scan
+echo "Scanning network $network_address/$2..."
+echo "Scanning from $start_ip to $end_ip"
+for ((i=start_ip_int; i<=end_ip_int; i++)); do
+    current_ip=$(int_to_ip $i)
+    ping -c 1 $current_ip | grep "64 bytes" | cut -d " " -f 4 | tr -d ":" &
+done
+
+wait
+
+# Print a newline for better readability
+echo ""

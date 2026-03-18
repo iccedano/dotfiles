@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration file to store the file path
-config_file="$HOME/bin/.gpi_config"
+config_file="$HOME/ICEbreaker/bin/.gpi_config"
 
 # Check if the config file exists and read the file path
 if [ -f "$config_file" ]; then
@@ -90,7 +90,7 @@ _EOF_
 
     if [[ "$REPLY" == 2 ]]; then
       echo "$MSG"
-      yt-dlp -x --audio-format mp3 --embed-thumbnail --embed-metadata -P "$DIR" "$LIN" 1> /dev/null
+      yt-dlp -x --audio-format opus --embed-thumbnail --embed-metadata -P "$DIR" "$LIN" 1> /dev/null
       routine
     fi
 

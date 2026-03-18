@@ -1,0 +1,35 @@
+[general]
+import = [
+    "~/.config/alacritty/themes/themes/iterm.toml"
+
+]
+
+[window]
+#opacity = 0.85
+#blur = true
+padding = {y = 5}
+decorations_theme_variant = "Dark"
+title = "The downward spiral"
+#dynamic_padding = true
+
+[font]
+normal = { family = "MesloLGS NF", style = "Regular" }
+bold = { family = "MesloLGS NF", style = "Bold" }
+italic = { family = "MesloLGS NF", style = "Regular Italic" }
+bold_italic = { family = "MesloLGS NF", style = "Bold Italic" }
+size = 12
+
+[keyboard]
+bindings = [
+{ key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
+{ key = "C", mods = "Control|Shift", action = "Copy" },
+{ key = "L", mods = "Control|Shift", chars = "l" },
+]
+
+[bell]
+#duration = 1
+
+[cursor]
+style = { blinking = "On" }
+unfocused_hollow = true
+blink_timeout = 60

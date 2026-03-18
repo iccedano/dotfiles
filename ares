@@ -89,7 +89,7 @@ if [[ $URL_PROBE  == true ]]; then
   done
 
 else
-  cd ~/Music/unsorted
+  cd ~/Music
   napster
 fi
 
